@@ -7,3 +7,16 @@ pool:
 steps:
 - script: echo "Pipeline is running"
   displayName: 'Sanity check'
+
+- task: Docker@2
+  displayName: 'Build php-fpm image (no push yet)'
+  inputs:
+    repository: 'mywebapp-php'
+    command: 'build'
+    Dockerfile: 'docker/php/Dockerfile'
+- task: Docker@2
+  inputs:
+    repository: 'mywebapp-php'
+    command: 'build'
+    Dockerfile: 'docker/php/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)'
