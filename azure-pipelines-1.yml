@@ -23,7 +23,7 @@ steps:
 - task: Docker@2
   displayName: 'Build and push php-fpm image to ACR'
   inputs:
-    containerRegistry: 'aztoaz-sc-pipe'
+    containerRegistry: 'acr-service-connection'
     repository: 'mywebapp-php'
     command: 'buildAndPush'
     Dockerfile: 'docker/php/Dockerfile'
