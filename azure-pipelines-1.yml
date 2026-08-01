@@ -1,0 +1,58 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: echo "Pipeline is running"
+  displayName: 'Sanity check'
+
+- task: Docker@2
+  displayName: 'Build php-fpm image (no push yet)'
+  inputs:
+    repository: 'mywebapp-php'
+    command: 'build'
+    Dockerfile: 'docker/php/Dockerfile'
+- task: Docker@2
+  inputs:
+    repository: 'mywebapp-php'
+    command: 'build'
+    Dockerfile: 'docker/php/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)'
+- task: Docker@2
+  displayName: 'Build and push php-fpm image to ACR'
+  inputs:
+    containerRegistry: 'acr-service-connection'
+    repository: 'mywebapp-php'
+    command: 'buildAndPush'
+    Dockerfile: 'docker/php/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)'
+    tags: |
+      $(Build.BuildId)
+      latest
+- task: Docker@2
+  displayName: 'Build and push nginx image to ACR'
+  inputs:
+    containerRegistry: 'acr-service-connection'
+    repository: 'mywebapp-nginx'
+    command: 'buildAndPush'
+    Dockerfile: 'docker/nginx/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)'
+    tags: |
+      $(Build.BuildId)
+      latest
+- task: CopyFiles@2
+  displayName: 'Stage deployment files'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: 'docker-compose.yml'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish deploy artifact'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'deploy-package'
+    publishLocation: 'pipeline'
+    
